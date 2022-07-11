@@ -1,9 +1,14 @@
+#include <numbers>
+#include <random>
 #include <vector>
 
-#include "SFML/Graphics.hpp"
+#include <SFML/Graphics.hpp>
+#include <range/v3/all.hpp>
 
 #include "ball.h"
 #include "collision_schedule.h"
+
+using namespace ranges::views;
 
 constexpr int WINDOW_X = 1024;
 constexpr int WINDOW_Y = 768;
@@ -21,26 +26,28 @@ void draw_ball(Ball const& ball, sf::RenderWindow& window) {
 int main() {
   sf::RenderWindow window(sf::VideoMode(WINDOW_X, WINDOW_Y),
                           "ball collision demo");
-  srand(time(NULL));
-
-  std::vector<Ball> balls;
 
   sf::Clock clock;
 
   float tp = clock.getElapsedTime().asSeconds();
 
-  // randomly initialize balls
-  for (int i = 0; i < (rand() % (MAX_BALLS - MIN_BALLS) + MIN_BALLS); i++) {
-    Ball ball;
-    X(ball.position) = rand() % WINDOW_X;
-    Y(ball.position) = rand() % WINDOW_Y;
-    float speed = 30 + rand() % 30;
-    X(ball.velocity) = speed * (-5 + (rand() % 10)) / 3.;
-    Y(ball.velocity) = speed * (-5 + (rand() % 10)) / 3.;
-    ball.radius = 5 + rand() % 5;
-    ball.mass = std::numbers::pi * ball.radius * ball.radius;
-    balls.push_back(ball);
-  }
+  std::uniform_int_distribution<int> dist{};
+  std::random_device gen{};
+
+  auto balls = generate_n(
+                   [&] {
+                     Ball ball;
+                     X(ball.position) = dist(gen) % WINDOW_X;
+                     Y(ball.position) = dist(gen) % WINDOW_Y;
+                     float speed = 30 + dist(gen) % 30;
+                     X(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
+                     Y(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
+                     ball.radius = 5 + dist(gen) % 5;
+                     ball.mass = std::numbers::pi * ball.radius * ball.radius;
+                     return ball;
+                   },
+                   dist(gen) % (MAX_BALLS - MIN_BALLS) + MIN_BALLS) |
+               ranges::to_vector;
 
   Collision_schedule schedule{WINDOW_X, WINDOW_Y, tp, balls};
 
