@@ -15,11 +15,12 @@ constexpr int WINDOW_Y = 768;
 constexpr int MAX_BALLS = 300;
 constexpr int MIN_BALLS = 100;
 
-void draw_ball(Ball const& ball, sf::RenderWindow& window) {
+void draw_ball(Ball const& ball, float tp, sf::RenderWindow& window) {
   sf::CircleShape gball;
   gball.setRadius(ball.radius);
-  gball.setPosition(X(ball.position) - ball.radius,
-                    Y(ball.position) - ball.radius);
+  gball.setPosition(
+      X(ball.position) + X(ball.velocity) * (tp - ball.tp) - ball.radius,
+      Y(ball.position) + Y(ball.velocity) * (tp - ball.tp) - ball.radius);
   window.draw(gball);
 }
 
@@ -37,13 +38,20 @@ int main() {
   auto balls = generate_n(
                    [&] {
                      Ball ball;
-                     X(ball.position) = dist(gen) % WINDOW_X;
-                     Y(ball.position) = dist(gen) % WINDOW_Y;
+                     ball.radius = 5 + dist(gen) % 5;
+                     X(ball.position) =
+                         ball.radius +
+                         dist(gen) %
+                             static_cast<int>(WINDOW_X - 2 * ball.radius);
+                     Y(ball.position) =
+                         ball.radius +
+                         dist(gen) %
+                             static_cast<int>(WINDOW_Y - 2 * ball.radius);
                      float speed = 30 + dist(gen) % 30;
                      X(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
                      Y(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
-                     ball.radius = 5 + dist(gen) % 5;
                      ball.mass = std::numbers::pi * ball.radius * ball.radius;
+                     ball.tp = tp;
                      return ball;
                    },
                    dist(gen) % (MAX_BALLS - MIN_BALLS) + MIN_BALLS) |
@@ -61,19 +69,14 @@ int main() {
       }
     }
 
-    float t2 = clock.getElapsedTime().asSeconds();
+    tp = clock.getElapsedTime().asSeconds();
 
-    float t1 = schedule.update(tp, t2, balls);
-
-    for (auto& ball : balls) {
-      move_ball(t2 - t1, ball);
-    }
-    tp = t2;
+    schedule.update(tp, balls);
 
     window.clear();
 
     for (auto const& ball : balls) {
-      draw_ball(ball, window);
+      draw_ball(ball, tp, window);
     }
 
     window.display();

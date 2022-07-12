@@ -7,9 +7,11 @@ struct Ball {
   boost::qvm::vec<float, 2> velocity;
   float radius = 0;
   float mass = 0;
+  float tp = 0;
 };
 
-inline void move_ball(float delta, Ball& ball) {
-  X(ball.position) = X(ball.position) + X(ball.velocity) * delta;
-  Y(ball.position) = Y(ball.position) + Y(ball.velocity) * delta;
+inline void move_ball(float tp, Ball& ball) {
+  X(ball.position) += X(ball.velocity) * (tp - ball.tp);
+  Y(ball.position) += Y(ball.velocity) * (tp - ball.tp);
+  ball.tp = tp;
 }

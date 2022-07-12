@@ -10,22 +10,27 @@
 using namespace ranges::views;
 
 void BM_collision_bench(benchmark::State& state) {
-  std::minstd_rand gen{};
+  std::mt19937 gen{};
   std::uniform_int_distribution<int> dist{};
 
-  int const Width = 1024;
-  int const Height = 768;
+  int const width = 1024;
+  int const height = 768;
 
   auto balls = generate_n(
                    [&] {
                      Ball ball;
-                     X(ball.position) = dist(gen) % Width;
-                     Y(ball.position) = dist(gen) % Height;
+                     ball.radius = 5 + dist(gen) % 5;
+                     X(ball.position) =
+                         ball.radius +
+                         dist(gen) % static_cast<int>(width - 2 * ball.radius);
+                     Y(ball.position) =
+                         ball.radius +
+                         dist(gen) % static_cast<int>(height - 2 * ball.radius);
                      float speed = 30 + dist(gen) % 30;
                      X(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
                      Y(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
-                     ball.radius = 5 + dist(gen) % 5;
                      ball.mass = std::numbers::pi * ball.radius * ball.radius;
+                     ball.tp = 0;
                      return ball;
                    },
                    200) |
@@ -33,10 +38,11 @@ void BM_collision_bench(benchmark::State& state) {
 
   float tp = 0;
 
-  Collision_schedule schedule{Width, Height, tp, balls};
+  Collision_schedule schedule{width, height, tp, balls};
 
   for (auto _ : state) {
-    tp = schedule.update(tp, tp + 100, balls);
+    tp += 100;
+    schedule.update(tp, balls);
   }
 }
 
