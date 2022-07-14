@@ -91,8 +91,6 @@ float schedule_collision_event(Ball const& left, Ball const& right) {
 
   float dist = mag(lp - rp);
 
-  if (dist == 0.0f) return std::numeric_limits<float>::max();
-
   boost::qvm::vec<float, 2> dir = normalized(lp - rp);
 
   float vx = dot(v, dir);
@@ -149,17 +147,12 @@ void Collision_schedule::push_event_for(int i1, float tp,
 }
 
 Collision_schedule::Collision_schedule(int width, int height, float tp,
-                                       std::vector<Ball>& balls)
+                                       std::vector<Ball> const& balls)
     : timesheet(balls.size(), {-1, std::numeric_limits<float>::max()}),
       width{width},
       height{height} {
   average_collision_time = solve_average_collision_time(width, height, balls);
   for (auto i1 = 0u; i1 < balls.size(); ++i1) {
-    auto& ball = balls[i1];
-    X(ball.position) =
-        std::clamp(X(ball.position), ball.radius, width - ball.radius);
-    Y(ball.position) =
-        std::clamp(Y(ball.position), ball.radius, height - ball.radius);
     push_event_for(i1, tp, balls);
   }
 }

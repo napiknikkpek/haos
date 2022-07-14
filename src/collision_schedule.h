@@ -45,7 +45,14 @@ class Collision_schedule {
   void push_event_for(int i1, float tp, std::vector<Ball> const& balls);
 
  public:
-  Collision_schedule(int width, int height, float tp, std::vector<Ball>& balls);
+  /*
+    requires
+      - balls must be in correct positions:
+        - no intersection with border
+        - no self intersections
+   */
+  Collision_schedule(int width, int height, float tp,
+                     std::vector<Ball> const& balls);
 
   // update balls positions if collision occurs
   void update(float tp, std::vector<Ball>& balls);

@@ -1,4 +1,3 @@
-#include <numbers>
 #include <random>
 #include <vector>
 
@@ -6,42 +5,22 @@
 #include <range/v3/all.hpp>
 
 #include "collision_schedule.h"
+#include "haos_sample.h"
 
 using namespace ranges::views;
 
 void BM_collision_bench(benchmark::State& state) {
-  std::mt19937 gen{};
-  std::uniform_int_distribution<int> dist{};
-
-  int const width = 1024;
-  int const height = 768;
-
-  auto balls = generate_n(
-                   [&] {
-                     Ball ball;
-                     ball.radius = 5 + dist(gen) % 5;
-                     X(ball.position) =
-                         ball.radius +
-                         dist(gen) % static_cast<int>(width - 2 * ball.radius);
-                     Y(ball.position) =
-                         ball.radius +
-                         dist(gen) % static_cast<int>(height - 2 * ball.radius);
-                     float speed = 30 + dist(gen) % 30;
-                     X(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
-                     Y(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
-                     ball.mass = std::numbers::pi * ball.radius * ball.radius;
-                     ball.tp = 0;
-                     return ball;
-                   },
-                   200) |
-               ranges::to_vector;
-
+  int const width = 5'000;
+  int const height = 5'000;
   float tp = 0;
+  std::mt19937 gen{};
+
+  auto balls = haos_sample(width, height, 10'000, 5, 10, 100, tp, gen);
 
   Collision_schedule schedule{width, height, tp, balls};
 
   for (auto _ : state) {
-    tp += 100;
+    tp += 1;
     schedule.update(tp, balls);
   }
 }

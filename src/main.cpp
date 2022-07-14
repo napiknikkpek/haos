@@ -1,4 +1,3 @@
-#include <numbers>
 #include <random>
 #include <vector>
 
@@ -7,6 +6,7 @@
 
 #include "ball.h"
 #include "collision_schedule.h"
+#include "haos_sample.h"
 
 using namespace ranges::views;
 
@@ -35,27 +35,9 @@ int main() {
   std::uniform_int_distribution<int> dist{};
   std::random_device gen{};
 
-  auto balls = generate_n(
-                   [&] {
-                     Ball ball;
-                     ball.radius = 5 + dist(gen) % 5;
-                     X(ball.position) =
-                         ball.radius +
-                         dist(gen) %
-                             static_cast<int>(WINDOW_X - 2 * ball.radius);
-                     Y(ball.position) =
-                         ball.radius +
-                         dist(gen) %
-                             static_cast<int>(WINDOW_Y - 2 * ball.radius);
-                     float speed = 30 + dist(gen) % 30;
-                     X(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
-                     Y(ball.velocity) = speed * (-5 + (dist(gen) % 10)) / 3.;
-                     ball.mass = std::numbers::pi * ball.radius * ball.radius;
-                     ball.tp = tp;
-                     return ball;
-                   },
-                   dist(gen) % (MAX_BALLS - MIN_BALLS) + MIN_BALLS) |
-               ranges::to_vector;
+  auto balls = haos_sample(WINDOW_X, WINDOW_Y,
+                           dist(gen) % (MAX_BALLS - MIN_BALLS) + MIN_BALLS, 5,
+                           10, 100, 0, gen);
 
   Collision_schedule schedule{WINDOW_X, WINDOW_Y, tp, balls};
 
